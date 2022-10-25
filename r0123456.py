@@ -9,7 +9,6 @@ class Parameters:
 	k: int
 	its: int
 
-
 class TSP_problem:
 	def __init__(self, d_matrix):
 		self.d_matrix = d_matrix
@@ -46,14 +45,19 @@ class TSP_problem:
 
 		#Do we need replacement?
 		selected = np.random.choice(population)
-		ind_i = np.argmax(np.array( list(map(fitness , selected)))
+		ind_i = np.argmax(np.array( list(map(fitness , selected))))
 
 		return selected[ind_i]
 
-	def recombination(p1: Individual, p2: Individual) -> Individual:
+	#def recombination(p1: Individual, p2: Individual) -> Individual:
 
-
-
+	def mutation(ind):
+		# swaps two positions if rand [0,1) < 0.05
+	    if np.random.rand() < ind.alpha:
+			i1 = random.randint(0, len(ind.order)-1)
+	        i2 = random.randint(0, len(ind.order)-1)
+	        ind.order[i1],ind.order[i2] = ind.order[i2], ind.order[i1]
+		return ind
 
 class Individual:
 	def __init__(self, order=None, alpha=None):
