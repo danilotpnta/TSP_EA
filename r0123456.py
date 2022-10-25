@@ -3,6 +3,13 @@ import numpy as np
 import random
 import statistics
 
+@dataclass
+class Parameters:
+	lambdaa: int
+	k: int
+	its: int
+
+
 class TSP_problem:
 	def __init__(self, d_matrix):
 		self.d_matrix = d_matrix
@@ -28,6 +35,25 @@ class TSP_problem:
 		#print(self.d_matrix[ind.order[-1]] [ind.order[0]])
 		#print(distance)
 		return distance
+
+	def initialize(self, lambdaa):
+		#look numpy array --> list
+		return np.array( list(map( Individual, np.arange(lambdaa))))
+
+		#[abc for e in range(5)]
+
+	def selection(population: np.array, k: int):
+
+		#Do we need replacement?
+		selected = np.random.choice(population)
+		ind_i = np.argmax(np.array( list(map(fitness , selected)))
+
+		return selected[ind_i]
+
+	def recombination(p1: Individual, p2: Individual) -> Individual:
+
+
+
 
 class Individual:
 	def __init__(self, order=None, alpha=None):
