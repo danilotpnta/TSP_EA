@@ -39,18 +39,23 @@ class TSP_problem:
 		print("second parent: ", ind2.order)
 		print("subset of first parent: ", subset_first_parent)
 		offspring = []
+
+		# rotate ind2's order since in the textbook the second list starts from the
+		# second crossover point
+		rotated_ind2_order = ind2.order[1:] + ind2.order[:1]
+		print("rotated list: ", rotated_ind2_order)
 		# j is the index of ind2 that marks the element being placed in the offspring
 		j = 0
 		# i is the index of the offspring where an element of ind2 is being placed
 		for i in range(0, low_index):
 			print(j)
-			ind2_value = ind2.order[j]
+			ind2_value = rotated_ind2_order[j]
 
 			# if the element in ind2 is already in the random subset of the first parent,
 			# then skip that element and iterate to the next one
 			while ind2_value in subset_first_parent and j < len(ind1.order)-1:
 				j += 1
-				ind2_value = ind2.order[j]
+				ind2_value = rotated_ind2_order[j]
 
 			if j >= len(ind1.order):
 				break
@@ -65,13 +70,13 @@ class TSP_problem:
 		# now do the same loop on ind2 for the remainder of the offspring indices
 		for i in range(high_index+1, len(ind1.order)):
 			print(j)
-			ind2_value = ind2.order[j]
+			ind2_value = rotated_ind2_order[j]
 
 			# if the element in ind2 is already in the random subset of the first parent,
 			# then skip that element and iterate to the next one
 			while ind2_value in subset_first_parent and j < len(ind1.order)-1:
 				j += 1
-				ind2_value = ind2.order[j]
+				ind2_value = rotated_ind2_order[j]
 
 			if j >= len(ind1.order):
 				break
