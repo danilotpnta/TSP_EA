@@ -1,7 +1,15 @@
+from dataclasses import dataclass
+
 import Reporter
 import numpy as np
 import random
 import statistics
+
+@dataclass
+class Parameters:
+	lambdaa: int
+	k: int
+	its: int
 
 class TSP_problem:
 	def __init__(self, d_matrix):
@@ -29,6 +37,7 @@ class TSP_problem:
 		#print(distance)
 		return distance
 
+
 	def recombination(self, ind1, ind2):
 		subset_indices = np.random.randint(low=0, high=len(ind1.order), size=2)
 		print("indices:", subset_indices)
@@ -48,7 +57,6 @@ class TSP_problem:
 		j = 0
 		# i is the index of the offspring where an element of ind2 is being placed
 		for i in range(0, low_index):
-			print(j)
 			ind2_value = rotated_ind2_order[j]
 
 			# if the element in ind2 is already in the random subset of the first parent,
@@ -65,11 +73,9 @@ class TSP_problem:
 
 		# now add the subset from the first parent
 		offspring += subset_first_parent
-		print(j)
 
 		# now do the same loop on ind2 for the remainder of the offspring indices
 		for i in range(high_index+1, len(ind1.order)):
-			print(j)
 			ind2_value = rotated_ind2_order[j]
 
 			# if the element in ind2 is already in the random subset of the first parent,
@@ -86,6 +92,31 @@ class TSP_problem:
 
 		print("offspring: ", offspring)
 		return offspring
+
+
+	def initialize(self, lambdaa):
+		#look numpy array --> list
+		return np.array( list(map( Individual, np.arange(lambdaa))))
+
+		#[abc for e in range(5)]
+
+	def selection(population: np.array, k: int):
+
+		#Do we need replacement?
+		selected = np.random.choice(population)
+		ind_i = np.argmax(np.array( list(map(fitness , selected))))
+
+		return selected[ind_i]
+
+	#def recombination(p1: Individual, p2: Individual) -> Individual:
+
+	def mutation(ind):
+		# swaps two positions if rand [0,1) < 0.05
+		if np.random.rand() < ind.alpha:
+			i1 = random.randint(0, len(ind.order)-1)
+			i2 = random.randint(0, len(ind.order)-1)
+			ind.order[i1],ind.order[i2] = ind.order[i2], ind.order[i1]
+		return ind
 
 
 class Individual:
