@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from collections.abc import Sequence, Mapping
 
 import Reporter
 import numpy as np
+import numpy.typing as npt
 import random
-import statistics
 
 @dataclass
 class Parameters:
@@ -11,30 +12,26 @@ class Parameters:
 	k: int
 	its: int
 
-class TSP_problem:
-	def __init__(self, d_matrix):
-		self.d_matrix = d_matrix
-		self.N = np.size(d_matrix,0)
+Matrix = list[list[float]]
 
-	def fitness(self, ind) :
-		'''
-		ind = [1,2,3,4,5]
-		ind = [2,4,1,3,5]
-		'''
+class TSP_problem:
+
+	def __init__(self, d_matrix: Matrix) -> None:
+		self.d_matrix = d_matrix
+		self.N = np.size(d_matrix, 0)
+
+	def fitness(self, ind):
 		distance = 0
 
-		for i in range(0, self.N - 1):
+		for i in range(0, self.N-1):
 			city_current = ind.order[i]
 			city_next = ind.order[i+1]
-
 			distance += self.d_matrix[city_current][city_next]
-			#print(self.d_matrix[city_current][city_next])
 
 			if distance == np.inf:
 				return distance
-		distance += self.d_matrix[ind.order[-1]] [ind.order[0]]
-		#print(self.d_matrix[ind.order[-1]] [ind.order[0]])
-		#print(distance)
+
+		distance += self.d_matrix[ind.order[-1]] [ind.order[0]] # Add last route from last to first element
 		return distance
 
 
@@ -94,21 +91,17 @@ class TSP_problem:
 		return offspring
 
 
-	def initialize(self, lambdaa):
-		#look numpy array --> list
-		return np.array( list(map( Individual, np.arange(lambdaa))))
+	def initialize(self, lambdaa: float) -> list:
+		return np.array( list(map( lambda x: Individual.random(self), np.empty(lambdaa) )) )
 
-		#[abc for e in range(5)]
 
-	def selection(population: np.array, k: int):
-
-		#Do we need replacement?
-		selected = np.random.choice(population)
-		ind_i = np.argmax(np.array( list(map(fitness , selected))))
+	# Selection by k-tournament
+	def selection(self, population: list, k: int):
+		selected = np.random.choice(population, k)
+		ind_i = np.argmax(np.array( list(map( self.fitness , selected))))
 
 		return selected[ind_i]
 
-	#def recombination(p1: Individual, p2: Individual) -> Individual:
 
 	def mutation(ind):
 		# swaps two positions if rand [0,1) < 0.05
@@ -120,6 +113,18 @@ class TSP_problem:
 
 
 class Individual:
+	def __init__(self, order: npt.ArrayLike, alpha: float) -> None:
+		self.order = order
+		self.alpha = alpha
+
+	@classmethod
+	def random(cls, TSP: TSP_problem):
+		order = np.arange(TSP.N)
+		np.random.shuffle(order)
+		return cls( order, 0.05)
+
+'''
+class Individual:
 	def __init__(self, order=None, alpha=None):
 		if order == None:
 			self.alpha = 0.05
@@ -128,6 +133,7 @@ class Individual:
 		else:
 			self.alpha = alpha
 			self.order = order
+'''
 
 
 # Modify the class name to match your student number.
@@ -143,10 +149,14 @@ class r0123456:
 		distanceMatrix = np.loadtxt(file, delimiter=",")
 		file.close()
 
-		# print(type(distanceMatrix[5,7]))
-
+		# Debug
+		p = Parameters(5,3,100)
 		TSP = TSP_problem(distanceMatrix)
-		ind = Individual( [0, 1, 2, 3, 4, 5, 6, 7],0.5)
+		population = TSP.initialize(3)
+		selection = TSP.selection(population, 3)
+
+
+		ind = Individual( [0, 1, 2, 3, 4, 5, 6, 7], 0.5)
 		ind2 = Individual([7, 6, 1, 3, 4, 0, 5, 2], 0.5)
 		TSP.recombination(ind, ind2)
 
