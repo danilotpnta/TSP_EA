@@ -37,19 +37,16 @@ class TSP_problem:
 
 	def recombination(self, ind1, ind2):
 		subset_indices = np.random.randint(low=0, high=len(ind1.order), size=2)
-		print("indices:", subset_indices)
 		low_index = np.min(subset_indices)
 		high_index = np.max(subset_indices)
-		subset_first_parent = ind1.order[low_index:high_index+1]
-		print("first parent: ", ind1.order)
-		print("second parent: ", ind2.order)
-		print("subset of first parent: ", subset_first_parent)
+		subset_first_parent = list(ind1.order[low_index:high_index+1])
+
 		offspring = []
 
 		# rotate ind2's order since in the textbook the second list starts from the
 		# second crossover point
-		rotated_ind2_order = ind2.order[1:] + ind2.order[:1]
-		print("rotated list: ", rotated_ind2_order)
+		rotated_ind2_order = np.concatenate((ind2.order[1:], (ind2.order[:1])))
+
 		# j is the index of ind2 that marks the element being placed in the offspring
 		j = 0
 		# i is the index of the offspring where an element of ind2 is being placed
@@ -87,23 +84,22 @@ class TSP_problem:
 			offspring.append(ind2_value)
 			j += 1
 
-		print("offspring: ", offspring)
-		return offspring
+		return Individual(order=offspring, alpha=.05)
 
 
-	def initialize(self, lambdaa: float) -> list:
+	def initialize(self, lambdaa: float):
 		return np.array( list(map( lambda x: Individual.random(self), np.empty(lambdaa) )) )
 
 
 	# Selection by k-tournament
 	def selection(self, population: list, k: int):
 		selected = np.random.choice(population, k)
-		ind_i = np.argmax(np.array( list(map( self.fitness , selected))))
+		ind_i = np.argmin(np.array( list(map( self.fitness , selected))))
 
 		return selected[ind_i]
 
 
-	def mutation(ind):
+	def mutation(self, ind):
 		# swaps two positions if rand [0,1) < 0.05
 		if np.random.rand() < ind.alpha:
 			i1 = random.randint(0, len(ind.order)-1)
@@ -150,23 +146,45 @@ class r0123456:
 		file.close()
 
 		# Debug
-		p = Parameters(5,3,100)
+		p = Parameters(100, 5, 100)
 		TSP = TSP_problem(distanceMatrix)
-		population = TSP.initialize(3)
-		selection = TSP.selection(population, 3)
+		population = TSP.initialize(100)
+		"""selection = TSP.selection(population, 3)
 
 
 		ind = Individual( [0, 1, 2, 3, 4, 5, 6, 7], 0.5)
 		ind2 = Individual([7, 6, 1, 3, 4, 0, 5, 2], 0.5)
-		TSP.recombination(ind, ind2)
+		TSP.recombination(ind, ind2)"""
 
 		# Your code here.
-		yourConvergenceTestsHere = False
-		while( yourConvergenceTestsHere ):
-			meanObjective = 0.0
-			bestObjective = 0.0
-			bestSolution = np.array([1,2,3,4,5])
+		fitnesses = list(map(TSP.fitness, population))
+		print(0, ": Mean fitness = ", np.mean(fitnesses), "\t Best fitness = ", np.min(fitnesses))
 
+		#yourConvergenceTestsHere = False
+		#while( yourConvergenceTestsHere ):
+		for i in range(0,p.its):
+			offspring = []
+			for jj in range(0, p.its):
+				ind1 = TSP.selection(population, p.k)
+				ind2 = TSP.selection(population, p.k)
+				offspring.append(TSP.recombination(ind1, ind2))
+				offspring[jj] = TSP.mutation(offspring[jj])
+
+			joinedPopulation = np.concatenate((np.array(offspring), population))
+
+			# elimination uses same method as selection
+			population = []
+			for jj in range(0, p.its):
+				population.append(TSP.selection(joinedPopulation, p.k))
+
+			fitnesses = list(map(TSP.fitness, population))
+			meanObjective = np.mean(fitnesses)
+			bestObjective = np.min(fitnesses)
+			bestIndex = np.argmin(fitnesses)
+
+			bestSolution = np.array(population[bestIndex].order)
+
+			print(0, ": Mean fitness = ", meanObjective, "\t Best fitness = ", bestObjective, ": Best path = ", bestSolution)
 
 			# Your code here.
 
