@@ -153,9 +153,10 @@ class r0123456:
 		print("{: >3} {: >15.3f} {: >15.3f}".format(*(0, np.mean(fitnesses), np.min(fitnesses))))
 
 		# TODO: Determine best convergence test
-		#yourConvergenceTestsHere = False
-		#while( yourConvergenceTestsHere ):
-		for i in range(0, p.its):
+		nbSameFit = 0
+		prevBestFit = 0
+		it = 0
+		while( nbSameFit < 30 and it < p.its):
 
 			# Create the offspring
 			offspring = np.empty(p.mu, dtype=Individual)
@@ -185,7 +186,7 @@ class r0123456:
 			#print(i, ": Mean fitness = ", meanObjective, "\t Best fitness = ", bestObjective, ": Best path = ", bestSolution)
 			
 			# Short format
-			print("{: >3} {: >15.3f} {: >15.3f}".format(*(i+1,meanObjective,bestObjective)))
+			print("{: >3} {: >15.3f} {: >15.3f}".format(*(it+1,meanObjective,bestObjective)))
 
 			# Call the reporter with:
 			#  - the mean objective function value of the population
@@ -196,6 +197,15 @@ class r0123456:
 			if timeLeft < 0:
 				print("Time expired")
 				break
+
+			it += 1
+
+			# ConvergenceTest
+			if (np.isclose(prevBestFit, bestObjective, rtol=1e-05)):
+				nbSameFit += 1
+			else:
+				nbSameFit = 0
+			prevBestFit = bestObjective
 
 		# Your code here.
 		return 0
