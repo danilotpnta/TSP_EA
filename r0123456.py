@@ -1,16 +1,22 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import Optional
 
 import Reporter
 import numpy as np
-import numpy.typing as npt
 import random
 
 @dataclass
 class Parameters:
-	lambdaa: int
-	k: int
-	its: int
+	lambdaa	: int					# Population size
+	k		: int					# Tournament selection
+	its		: int					# Number of iterations
+	mu		: Optional[int] = None	# Offspring size
+
+	# Checks after creation if mu is specified, otherwise default mu of double the population size
+	def __post_init__(self):
+		if self.mu is None:
+			self.mu = self.lambdaa * 2
 
 class TSP_problem:
 
@@ -32,7 +38,7 @@ class TSP_problem:
 		distance += self.d_matrix[ind.order[-1]] [ind.order[0]] # Add last route from last to first element
 		return distance
 
-
+	# TODO: simplify code + np.empty arrays (Bixente)
 	def recombination(self, ind1: Individual, ind2: Individual) -> Individual:
 		subset_indices = np.random.randint(low=0, high=len(ind1.order), size=2)
 		low_index = np.min(subset_indices)
@@ -82,7 +88,7 @@ class TSP_problem:
 			offspring.append(ind2_value)
 			j += 1
 
-		return Individual(order=offspring, alpha=.05)
+		return Individual(order=np.array(offspring), alpha=.05)
 
 
 	def initialize(self, lambdaa: float) -> np.ndarray:
@@ -97,13 +103,13 @@ class TSP_problem:
 		return selected[ind_i]
 
 
-	def mutation(self, ind: Individual) -> Individual:
+	def mutation(self, ind: Individual):
 		# swaps two positions if rand [0,1) < 0.05
 		if np.random.rand() < ind.alpha:
 			i1 = random.randint(0, len(ind.order)-1)
 			i2 = random.randint(0, len(ind.order)-1)
-			ind.order[i1],ind.order[i2] = ind.order[i2], ind.order[i1]
-		return ind
+			ind.order[i1], ind.order[i2] = ind.order[i2], ind.order[i1]
+		return
 
 
 class Individual:
@@ -143,10 +149,10 @@ class r0123456:
 		distanceMatrix = np.loadtxt(file, delimiter=",")
 		file.close()
 
-		# Debug
-		p = Parameters(100, 5, 100)
+		# Lambda | k-tournament | Iterations | mu (default = 2 * lambda)
+		p = Parameters(100, 5, 300)
 		TSP = TSP_problem(distanceMatrix)
-		population = TSP.initialize(100)
+		population = TSP.initialize(p.lambdaa)
 		"""selection = TSP.selection(population, 3)
 
 
@@ -155,34 +161,47 @@ class r0123456:
 		TSP.recombination(ind, ind2)"""
 
 		# Your code here.
-		fitnesses = list(map(TSP.fitness, population))
-		print(0, ": Mean fitness = ", np.mean(fitnesses), "\t Best fitness = ", np.min(fitnesses))
+		fitnesses = np.array(list(map(TSP.fitness, population)))
+		#print(0, ": Mean fitness = ", np.mean(fitnesses), "\t Best fitness = ", np.min(fitnesses))
+
+		# Short format
+		print("{: >3} {: >15} {: >15}".format(*("i", "Mean Fitness", "Best Fitness")))
+		print("{: >3} {: >15.3f} {: >15.3f}".format(*(0, np.mean(fitnesses), np.min(fitnesses))))
 
 		#yourConvergenceTestsHere = False
 		#while( yourConvergenceTestsHere ):
-		for i in range(0,p.its):
-			offspring = []
-			for jj in range(0, p.its):
-				ind1 = TSP.selection(population, p.k)
-				ind2 = TSP.selection(population, p.k)
-				offspring.append(TSP.recombination(ind1, ind2))
-				offspring[jj] = TSP.mutation(offspring[jj])
+		for i in range(0, p.its):
 
-			joinedPopulation = np.concatenate((np.array(offspring), population))
+			# Create the offspring
+			offspring = np.empty(p.mu, dtype=Individual)
+			for jj in range(0, p.mu):
+				parent1 = TSP.selection(population, p.k)
+				parent2 = TSP.selection(population, p.k)
+				offspring[jj] = TSP.recombination(parent1, parent2)
+				TSP.mutation(offspring[jj])
 
-			# elimination uses same method as selection
-			population = []
-			for jj in range(0, p.its):
-				population.append(TSP.selection(joinedPopulation, p.k))
+			# Joint the offspring with the original population
+			joinedPopulation = np.concatenate((offspring, population))
 
-			fitnesses = list(map(TSP.fitness, population))
+			# Elimination uses same method as selection (k-tournament)
+			# TODO: possible to change this to map
+			population = np.empty(p.lambdaa, dtype=Individual)
+			for jj in range(0, p.lambdaa):
+				population[jj] = TSP.selection(joinedPopulation, p.k)
+
+			fitnesses = np.array(list(map(TSP.fitness, population)))
 			meanObjective = np.mean(fitnesses)
-			bestObjective = np.min(fitnesses)
 			bestIndex = np.argmin(fitnesses)
+			bestObjective = fitnesses[bestIndex]
 
-			bestSolution = np.array(population[bestIndex].order)
+			bestSolution = population[bestIndex].order
 
-			print(0, ": Mean fitness = ", meanObjective, "\t Best fitness = ", bestObjective, ": Best path = ", bestSolution)
+			# Long format
+			#print(i, ": Mean fitness = ", meanObjective, "\t Best fitness = ", bestObjective, ": Best path = ", bestSolution)
+			
+			# Short format
+			print("{: >3} {: >15.3f} {: >15.3f}".format(*(i+1,meanObjective,bestObjective)))
+
 
 			# Your code here.
 
@@ -193,6 +212,7 @@ class r0123456:
 			#    with city numbering starting from 0
 			timeLeft = self.reporter.report(meanObjective, bestObjective, bestSolution)
 			if timeLeft < 0:
+				print("Time expired")
 				break
 
 		# Your code here.
