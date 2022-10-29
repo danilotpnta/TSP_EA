@@ -123,18 +123,6 @@ class Individual:
 		np.random.shuffle(order)
 		return cls( order, 0.05)
 
-'''
-class Individual:
-	def __init__(self, order=None, alpha=None):
-		if order == None:
-			self.alpha = 0.05
-			self.order = np.arange( len(TSP.values))
-			np.random.shuffle(self.order)
-		else:
-			self.alpha = alpha
-			self.order = order
-'''
-
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -153,15 +141,11 @@ class r0123456:
 		p = Parameters(100, 5, 300)
 		TSP = TSP_problem(distanceMatrix)
 		population = TSP.initialize(p.lambdaa)
-		"""selection = TSP.selection(population, 3)
 
-
-		ind = Individual( [0, 1, 2, 3, 4, 5, 6, 7], 0.5)
-		ind2 = Individual([7, 6, 1, 3, 4, 0, 5, 2], 0.5)
-		TSP.recombination(ind, ind2)"""
-
-		# Your code here.
+		# Print initial fitness
 		fitnesses = np.array(list(map(TSP.fitness, population)))
+		
+		# Long format
 		#print(0, ": Mean fitness = ", np.mean(fitnesses), "\t Best fitness = ", np.min(fitnesses))
 
 		# Short format
@@ -181,7 +165,7 @@ class r0123456:
 				offspring[jj] = TSP.recombination(parent1, parent2)
 				TSP.mutation(offspring[jj])
 
-			# Joint the offspring with the original population
+			# Join the offspring with the original population
 			joinedPopulation = np.concatenate((offspring, population))
 
 			# Elimination uses same method as selection (k-tournament)
