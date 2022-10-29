@@ -149,7 +149,6 @@ class r0123456:
 		distanceMatrix = np.loadtxt(file, delimiter=",")
 		file.close()
 
-<<<<<<< HEAD
 		# Lambda | k-tournament | Iterations | mu (default = 2 * lambda)
 		p = Parameters(100, 5, 300)
 		TSP = TSP_problem(distanceMatrix)
@@ -168,31 +167,11 @@ class r0123456:
 		# Short format
 		print("{: >3} {: >15} {: >15}".format(*("i", "Mean Fitness", "Best Fitness")))
 		print("{: >3} {: >15.3f} {: >15.3f}".format(*(0, np.mean(fitnesses), np.min(fitnesses))))
-=======
-		# Potential Parameter values
-		p = Parameters(100, 5, 100)
-		TSP = TSP_problem(distanceMatrix)
-		population = TSP.initialize(p.lambdaa)
-
-		# print initial fitness
-		fitnesses = list(map(TSP.fitness, population))
-		print(0, ": Mean fitness = ", np.mean(fitnesses), "\t Best fitness = ", np.min(fitnesses))
->>>>>>> a96bf0c10d860a8539780e2cd29d873fb971cc9e
 
 		# TODO: Determine best convergence test
 		#yourConvergenceTestsHere = False
 		#while( yourConvergenceTestsHere ):
 		for i in range(0, p.its):
-<<<<<<< HEAD
-=======
-			offspring = []
-			# TODO: how many offspring should we create in each iteration?
-			for jj in range(0, p.its):
-				ind1 = TSP.selection(population, p.k)
-				ind2 = TSP.selection(population, p.k)
-				offspring.append(TSP.recombination(ind1, ind2))
-				offspring[jj] = TSP.mutation(offspring[jj])
->>>>>>> a96bf0c10d860a8539780e2cd29d873fb971cc9e
 
 			# Create the offspring
 			offspring = np.empty(p.mu, dtype=Individual)
