@@ -1,5 +1,5 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from collections.abc import Sequence, Mapping
 
 import Reporter
 import numpy as np
@@ -12,15 +12,13 @@ class Parameters:
 	k: int
 	its: int
 
-Matrix = list[list[float]]
-
 class TSP_problem:
 
-	def __init__(self, d_matrix: Matrix) -> None:
+	def __init__(self, d_matrix: np.ndarray):
 		self.d_matrix = d_matrix
 		self.N = np.size(d_matrix, 0)
 
-	def fitness(self, ind):
+	def fitness(self, ind: Individual) -> float:
 		distance = 0
 
 		for i in range(0, self.N-1):
@@ -35,7 +33,7 @@ class TSP_problem:
 		return distance
 
 
-	def recombination(self, ind1, ind2):
+	def recombination(self, ind1: Individual, ind2: Individual) -> Individual:
 		subset_indices = np.random.randint(low=0, high=len(ind1.order), size=2)
 		low_index = np.min(subset_indices)
 		high_index = np.max(subset_indices)
@@ -87,19 +85,19 @@ class TSP_problem:
 		return Individual(order=offspring, alpha=.05)
 
 
-	def initialize(self, lambdaa: float):
+	def initialize(self, lambdaa: float) -> np.ndarray:
 		return np.array( list(map( lambda x: Individual.random(self), np.empty(lambdaa) )) )
 
 
 	# Selection by k-tournament
-	def selection(self, population: list, k: int):
+	def selection(self, population: np.ndarray, k: int) -> Individual:
 		selected = np.random.choice(population, k)
 		ind_i = np.argmin(np.array( list(map( self.fitness , selected))))
 
 		return selected[ind_i]
 
 
-	def mutation(self, ind):
+	def mutation(self, ind: Individual) -> Individual:
 		# swaps two positions if rand [0,1) < 0.05
 		if np.random.rand() < ind.alpha:
 			i1 = random.randint(0, len(ind.order)-1)
@@ -109,7 +107,7 @@ class TSP_problem:
 
 
 class Individual:
-	def __init__(self, order: npt.ArrayLike, alpha: float) -> None:
+	def __init__(self, order: np.ndarray, alpha: float):
 		self.order = order
 		self.alpha = alpha
 
