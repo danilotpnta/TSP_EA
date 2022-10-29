@@ -207,12 +207,9 @@ class r0123456:
 				nbSameFit = 0
 			prevBestFit = bestObjective
 
-		# Your code here.
 		return 0
 
 a = r0123456()
 a.optimize('./tour50.csv')
+#a.optimize('./tour100.csv')
 
-
-# ind = Individual([0, 1, 2, 3],0.5)
-# a.fitness(ind)
