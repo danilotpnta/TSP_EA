@@ -82,11 +82,11 @@ class TSP_problem:
 			offspring.append(ind2_value)
 			j += 1
 
-		return Individual(order=offspring, alpha=.05)
+		return Individual(order=np.array(offspring), alpha=.05)
 
 
-	def initialize(self, lambdaa: float) -> np.ndarray:
-		return np.array( list(map( lambda x: Individual.random(self), np.empty(lambdaa) )) )
+	def initialize(self, lambdaa: int) -> np.ndarray:
+		return np.array(list(map(lambda x: Individual.random(self), np.empty(lambdaa))))
 
 
 	# Selection by k-tournament
@@ -143,25 +143,21 @@ class r0123456:
 		distanceMatrix = np.loadtxt(file, delimiter=",")
 		file.close()
 
-		# Debug
+		# Potential Parameter values
 		p = Parameters(100, 5, 100)
 		TSP = TSP_problem(distanceMatrix)
-		population = TSP.initialize(100)
-		"""selection = TSP.selection(population, 3)
+		population = TSP.initialize(p.lambdaa)
 
-
-		ind = Individual( [0, 1, 2, 3, 4, 5, 6, 7], 0.5)
-		ind2 = Individual([7, 6, 1, 3, 4, 0, 5, 2], 0.5)
-		TSP.recombination(ind, ind2)"""
-
-		# Your code here.
+		# print initial fitness
 		fitnesses = list(map(TSP.fitness, population))
 		print(0, ": Mean fitness = ", np.mean(fitnesses), "\t Best fitness = ", np.min(fitnesses))
 
+		# TODO: Determine best convergence test
 		#yourConvergenceTestsHere = False
 		#while( yourConvergenceTestsHere ):
-		for i in range(0,p.its):
+		for i in range(0, p.its):
 			offspring = []
+			# TODO: how many offspring should we create in each iteration?
 			for jj in range(0, p.its):
 				ind1 = TSP.selection(population, p.k)
 				ind2 = TSP.selection(population, p.k)
@@ -182,9 +178,8 @@ class r0123456:
 
 			bestSolution = np.array(population[bestIndex].order)
 
-			print(0, ": Mean fitness = ", meanObjective, "\t Best fitness = ", bestObjective, ": Best path = ", bestSolution)
-
-			# Your code here.
+			# print fitness
+			print(i, ": Mean fitness = ", meanObjective, "\t Best fitness = ", bestObjective, ": Best path = ", bestSolution)
 
 			# Call the reporter with:
 			#  - the mean objective function value of the population
