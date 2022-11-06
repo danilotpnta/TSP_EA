@@ -92,7 +92,7 @@ class TSP_problem:
 
 
 	def initialize(self, lambdaa: int) -> np.ndarray:
-		return np.array(list(map(lambda x: Individual.random(self), np.empty(lambdaa))))
+		return np.array(list(map(lambda x: Individual.notinf(self), np.empty(lambdaa))))
 
 
 	# Selection by k-tournament
@@ -123,6 +123,42 @@ class Individual:
 		np.random.shuffle(order)
 		return cls( order, 0.05)
 
+	@classmethod
+	def notinf(cls, TSP: TSP_problem):
+		order = np.empty(TSP.N, dtype=int)
+		order[0] = 0
+		citiesLeft = set(range(1,TSP.N))
+		citiesThisRun = set(range(1,TSP.N))
+		currCity = 0
+		index = 1
+		while index != TSP.N:
+			nextCity = np.random.choice(tuple(citiesThisRun))
+			citiesThisRun.remove(nextCity)
+
+			# Search for a feasable next city
+			if TSP.d_matrix[currCity,nextCity] != np.inf:
+				order[index] = nextCity
+				citiesLeft.remove(nextCity)
+				currCity = nextCity
+				citiesThisRun = set(citiesLeft) # Constructor needed, otherwise pointer to same memory space
+				index += 1
+
+			# No feasable next city
+			if len(citiesThisRun) == 0 and index != TSP.N:
+
+				if len(order) == TSP.N-1: 
+					order[index] = list(citiesLeft)[0]
+					index += 1
+				else:
+					randCity = np.random.choice(tuple(citiesLeft))
+					order[index] = randCity
+					citiesLeft.remove(randCity)
+					currCity = nextCity
+					citiesThisRun = set(citiesLeft) # Constructor needed, otherwise copy to memory
+					index += 1
+
+		return cls(np.array(order),0.05)
+
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -132,6 +168,9 @@ class r0123456:
 
 	# The evolutionary algorithm's main loop
 	def optimize(self, filename):
+		print("--- TSP Genetic Algorithm ---")
+
+		print("- Reading distance matrix...")
 		# Read distance matrix from file.
 		file = open(filename)
 		distanceMatrix = np.loadtxt(file, delimiter=",")
@@ -140,7 +179,10 @@ class r0123456:
 		# Lambda | k-tournament | Iterations | mu (default = 2 * lambda)
 		p = Parameters(100, 5, 300)
 		TSP = TSP_problem(distanceMatrix)
+		print("- Initializing population...")
 		population = TSP.initialize(p.lambdaa)
+
+		print("- Running optimization...")
 
 		# Print initial fitness
 		fitnesses = np.array(list(map(TSP.fitness, population)))
@@ -195,7 +237,7 @@ class r0123456:
 			#    with city numbering starting from 0
 			timeLeft = self.reporter.report(meanObjective, bestObjective, bestSolution)
 			if timeLeft < 0:
-				print("Time expired")
+				print("- Time expired!")
 				break
 
 			it += 1
@@ -210,6 +252,5 @@ class r0123456:
 		return 0
 
 a = r0123456()
-a.optimize('./tour50.csv')
-#a.optimize('./tour100.csv')
+a.optimize('./tour100.csv')
 
