@@ -26,7 +26,6 @@ class TSP_problem:
 
 	def fitness(self, ind: Individual) -> float:
 		distance = 0
-
 		for i in range(0, self.N-1):
 			city_current = ind.order[i]
 			city_next = ind.order[i+1]
@@ -38,57 +37,21 @@ class TSP_problem:
 		distance += self.d_matrix[ind.order[-1]] [ind.order[0]] # Add last route from last to first element
 		return distance
 
-	# TODO: simplify code + np.empty arrays (Bixente)
+	# simplified code and using np.empty
 	def recombination(self, ind1: Individual, ind2: Individual) -> Individual:
-		subset_indices = np.random.randint(low=0, high=len(ind1.order), size=2)
+		subset_indices = np.random.randint(low=0, high=self.N, size=2)
 		low_index = np.min(subset_indices)
 		high_index = np.max(subset_indices)
-		subset_first_parent = list(ind1.order[low_index:high_index+1])
+		subset_first_parent = np.array(ind1.order[low_index:high_index+1])
 
-		offspring = []
-
-		# rotate ind2's order since in the textbook the second list starts from the
-		# second crossover point
+		offspring = np.empty(shape=self.N, dtype=int)
 		rotated_ind2_order = np.concatenate((ind2.order[1:], (ind2.order[:1])))
+		remaining_ind2 = np.setdiff1d(rotated_ind2_order, subset_first_parent, assume_unique=True)
+		offspring[low_index:high_index+1] = subset_first_parent
+		offspring[0:low_index] = remaining_ind2[0:low_index]
+		offspring[high_index+1:self.N] = remaining_ind2[low_index:]
 
-		# j is the index of ind2 that marks the element being placed in the offspring
-		j = 0
-		# i is the index of the offspring where an element of ind2 is being placed
-		for i in range(0, low_index):
-			ind2_value = rotated_ind2_order[j]
-
-			# if the element in ind2 is already in the random subset of the first parent,
-			# then skip that element and iterate to the next one
-			while ind2_value in subset_first_parent and j < len(ind1.order)-1:
-				j += 1
-				ind2_value = rotated_ind2_order[j]
-
-			if j >= len(ind1.order):
-				break
-
-			offspring.append(ind2_value)
-			j += 1
-
-		# now add the subset from the first parent
-		offspring += subset_first_parent
-
-		# now do the same loop on ind2 for the remainder of the offspring indices
-		for i in range(high_index+1, len(ind1.order)):
-			ind2_value = rotated_ind2_order[j]
-
-			# if the element in ind2 is already in the random subset of the first parent,
-			# then skip that element and iterate to the next one
-			while ind2_value in subset_first_parent and j < len(ind1.order)-1:
-				j += 1
-				ind2_value = rotated_ind2_order[j]
-
-			if j >= len(ind1.order):
-				break
-
-			offspring.append(ind2_value)
-			j += 1
-
-		return Individual(order=np.array(offspring), alpha=.05)
+		return Individual(order=offspring, alpha=.05)
 
 
 	def initialize(self, lambdaa: int) -> np.ndarray:
@@ -198,6 +161,7 @@ class r0123456:
 		nbSameFit = 0
 		prevBestFit = 0
 		it = 0
+
 		while( nbSameFit < 30 and it < p.its):
 
 			# Create the offspring
@@ -216,7 +180,6 @@ class r0123456:
 			population = np.empty(p.lambdaa, dtype=Individual)
 			for jj in range(0, p.lambdaa):
 				population[jj] = TSP.selection(joinedPopulation, p.k)
-
 			fitnesses = np.array(list(map(TSP.fitness, population)))
 			meanObjective = np.mean(fitnesses)
 			bestIndex = np.argmin(fitnesses)
@@ -252,5 +215,5 @@ class r0123456:
 		return 0
 
 a = r0123456()
-a.optimize('./tour100.csv')
+a.optimize('./tour50.csv')
 
