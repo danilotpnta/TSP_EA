@@ -5,6 +5,7 @@ from typing import Optional
 import Reporter
 import numpy as np
 import random
+import csv
 
 @dataclass
 class Parameters:
@@ -140,7 +141,7 @@ class r0123456:
 		file.close()
 
 		# Lambda | k-tournament | Iterations | mu (default = 2 * lambda)
-		p = Parameters(100, 5, 300)
+		p = Parameters(100, 6, 300)
 		TSP = TSP_problem(distanceMatrix)
 		print("- Initializing population...")
 		population = TSP.initialize(p.lambdaa)
@@ -162,7 +163,16 @@ class r0123456:
 		prevBestFit = 0
 		it = 0
 
-		while( nbSameFit < 30 and it < p.its):
+		# Open file to write results and add initial values + header
+		header = ['Iteration', 'MeanFit', 'BestFit'] 
+		with open('result.csv', 'w', newline='') as file:
+			writer = csv.writer(file)
+			file.truncate()
+			writer.writerow(header)
+			writer.writerow([0,np.mean(fitnesses), np.min(fitnesses)])
+			file.close()
+
+		while( nbSameFit < 50 and it < p.its):
 
 			# Create the offspring
 			offspring = np.empty(p.mu, dtype=Individual)
@@ -212,8 +222,13 @@ class r0123456:
 				nbSameFit = 0
 			prevBestFit = bestObjective
 
+			# Open file for writing
+			with open('result.csv', 'a', newline='') as file:
+				writer = csv.writer(file)
+				writer.writerow([it, meanObjective, bestObjective])
+				file.close()
+
 		return 0
 
 a = r0123456()
-a.optimize('./tour50.csv')
-
+a.optimize('./tour100.csv')
