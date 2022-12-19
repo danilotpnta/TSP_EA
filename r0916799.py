@@ -124,6 +124,7 @@ class TSP_problem:
 			ind.order[i1], ind.order[i2] = ind.order[i2], ind.order[i1]
 		return
 
+	''' Helper Functions '''
 	# Calculates results for reporter
 	def getResults(self, population):
 		fitnesses = np.array(list( map(self.fitness, population) ))
@@ -131,9 +132,12 @@ class TSP_problem:
 		bestIndex = np.argmin(fitnesses)
 		bestObjective = fitnesses[bestIndex]
 		bestSolution = population[bestIndex].order
-
 		return meanObjective, bestObjective, bestSolution
 
+	# Make bestSolution's city numbering start from 0
+	def getCity0Start(self, order: np.ndarray) -> np.ndarray:
+		city0Index = np.where(order == 0)[0][0]
+		return np.concatenate((order[city0Index:],order[:city0Index]))
 
 # Modify the class name to match your student number.
 class r0916799:
@@ -141,57 +145,83 @@ class r0916799:
 	def __init__(self):
 		self.reporter = Reporter.Reporter(self.__class__.__name__)
 
-	# The evolutionary algorithm's main loop
-	def optimize(self, filename):
+	''' Helper functions '''
+	# Read distance matrix from file.
+	def getMatrix(self, filename):
 		print("--- TSP Genetic Algorithm:", filename, "---")
-
-		# Read distance matrix from file.
 		print("- Reading distance matrix...")
 		file = open(filename)
 		distanceMatrix = np.loadtxt(file, delimiter=",")
 		file.close()
+		return distanceMatrix
 
-		p = Parameters(lambdaa = 100, k = 6, its = 300)
+	# Prints fitness values of populaiton before & after optimize
+	def printResults(self, section, TSP, numSameFit, itr, meanObj, bestObj, bestSol):
+
+		# limits how much of ind's order one can see in terminal
+		maxIcanSee = 175
+		space, Ndigits, sqrbrackets = 1, TSP.N, 2
+		lengthStringOrder = space * Ndigits + len(str(Ndigits)) * Ndigits + sqrbrackets
+		orderStr = np.array2string(TSP.getCity0Start(bestSol), max_line_width=lengthStringOrder)
+		if lengthStringOrder > maxIcanSee:
+			orderStr = orderStr[:maxIcanSee]
+		# Print header & fitness values of initial population
+		if section == 'init' :
+			header = ["Cnvrg","Itr", "Mean Fitness", "Best Fitness", "Order"]
+			data = [0, 0, meanObj, bestObj,orderStr]
+			print("{: >6} {: >3} {: >15} {: >15} {: >}".format(*header))
+			print("{: >6} {: >3} {: >15.3f} {: >15.3f} {: >}".format(*data))
+
+		# Print fitness values from current iteration
+		if section == 'inLoop' :
+			data = [numSameFit, itr + 1, meanObj, bestObj, orderStr]
+			print("{: >6} {: >3} {: >15.3f} {: >15.3f} {: >}".format(*data))
+
+	# Open file to write results
+	def saveData(self, section, itr, meanObj,bestObj):
+
+		if section == 'init' :
+			header = ['Iteration', 'MeanFit', 'BestFit']
+			with open('result.csv', 'w', newline='') as file:
+				writer = csv.writer(file)
+				file.truncate()
+				writer.writerow(header)
+				writer.writerow([itr,meanObj, bestObj])
+				file.close()
+
+		if section == 'inLoop' :
+			with open('result.csv', 'a', newline='') as file:
+				writer = csv.writer(file)
+				writer.writerow([itr, meanObj, bestObj])
+				file.close()
+
+	''' The evolutionary algorithm's main loop '''
+	def optimize(self, filename):
+		distanceMatrix = self.getMatrix(filename)
+		p   = Parameters(lambdaa = 100, k = 6, its = 300)
 		TSP = TSP_problem(distanceMatrix)
 
 		print("- Initializing population...")
 		population = TSP.initialize(p.lambdaa)
 
 		print("- Running optimization...")
-		# Print initial fitness
-		meanObjective, bestObjective, bestSolution = TSP.getResults(population)
-		header = ["Cnvrg","Itr", "Mean Fitness", "Best Fitness", "Order"]
-		print("{: >6} {: >3} {: >15} {: >15} {: >15}".format(*header))
-		print("{: >6} {: >3} {: >15.3f} {: >15.3f} {: >15}".format(*(0, 0, meanObjective, bestObjective, str(bestSolution) )))
-
-
-		fitnesses = np.array(list(map(TSP.fitness, population)))
-		print("{: >6} {: >3} {: >15} {: >15} {: >15}".format(*("Cnvrg","Itr", "Mean Fitness", "Best Fitness", "Order")))
-		print("{: >6} {: >3} {: >15.3f} {: >15.3f} {: >15}".format(*(0, 0, np.mean(fitnesses), np.min(fitnesses), str(population[np.argmin(fitnesses)].order) )))
-
-		# Open file to write results and add initial values + header
-		header = ['Iteration', 'MeanFit', 'BestFit']
-		with open('result.csv', 'w', newline='') as file:
-			writer = csv.writer(file)
-			file.truncate()
-			writer.writerow(header)
-			writer.writerow([0,np.mean(fitnesses), np.min(fitnesses)])
-			file.close()
+		meanObj, bestObj, bestSol = TSP.getResults(population)
+		self.printResults('init', TSP, 0, 0, meanObj, bestObj, bestSol)
+		self.saveData('init', 0, meanObj, bestObj)
 
 		# variables for convergence test
 		numSameFit, prevBestFit, itr = 0, 0, 0
 
 		while(numSameFit < 50 and itr < p.its):
-
 			# Create the offspring
 			offspring = np.empty(p.mu, dtype = Individual)
 			for jj in range(0, p.mu):
-				parent1 = TSP.selection(population, p.k)
-				parent2 = TSP.selection(population, p.k)
+				parent1 	  = TSP.selection(population, p.k)
+				parent2 	  = TSP.selection(population, p.k)
 				offspring[jj] = TSP.recombination(parent1, parent2)
 				TSP.mutation(offspring[jj])
 
-			# Join the offspring with the original population
+			# Join offspring with original population
 			joinedPopulation = np.concatenate((offspring, population))
 
 			# k-tournament Elimination
@@ -199,35 +229,29 @@ class r0916799:
 			for jj in range(0, p.lambdaa):
 				population[jj] = TSP.selection(joinedPopulation, p.k)
 
-			# Calculate and print final results from current iteration
-			meanObjective, bestObjective, bestSolution = TSP.getResults(population)
-			print("{: >6} {: >3} {: >15.3f} {: >15.3f}".format(*(numSameFit, itr + 1, meanObjective, bestObjective)))
+			# Calculate fitness values from current iteration
+			meanObj, bestObj, bestSol = TSP.getResults(population)
+			self.printResults('inLoop', TSP, numSameFit, itr, meanObj, bestObj, bestSol)
 			itr += 1
 
-			# Call the reporter with:
-			#  - the mean objective function value of the population
-			#  - the best objective function value of the population
-			#  - a 1D numpy array in the cycle notation containing the best solution
-			#    with city numbering starting from 0
-			timeLeft = self.reporter.report(meanObjective, bestObjective, bestSolution)
+			# Call the reporter
+			timeLeft = self.reporter.report(meanObj, bestObj, TSP.getCity0Start(bestSol))
 			if timeLeft < 0:
 				print("- Time expired!")
 				break
 
 			# ConvergenceTest
-			if np.isclose(prevBestFit, bestObjective, rtol=1e-05):
+			if np.isclose(prevBestFit, bestObj, rtol = 1e-05):
 				numSameFit += 1
 			else:
 				numSameFit = 0
-			prevBestFit = bestObjective
+			prevBestFit = bestObj
 
 			# Open file for writing
-			with open('result.csv', 'a', newline='') as file:
-				writer = csv.writer(file)
-				writer.writerow([itr, meanObjective, bestObjective])
-				file.close()
+			self.saveData('inLoop', itr, meanObj, bestObj)
 
 		return 0
 
-a = r0916799()
-a.optimize('./tour3.csv')
+if __name__ == '__main__':
+	a = r0916799()
+	a.optimize('./tour50.csv')
