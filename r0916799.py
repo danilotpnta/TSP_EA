@@ -42,7 +42,6 @@ class Individual:
 			self.alpha = alpha
 
 ''' Faster functions for TSP_problem'''
-
 @jit(nopython=True)
 def cost(d_matrix, city_current: int, city_next: int) -> float:
 	distance = d_matrix[city_current][city_next]
@@ -780,9 +779,9 @@ if __name__ == '__main__':
 	a = r0916799()
 	# a.optimize('./tour50.csv')
 
-	# COMMENT AFTERWARDS
-	N = 750
-	# N ='Inf'
+	# COMMENT AFTERWARDS f
+	# N = 750
+	N ='Inf'
 	filename = f'./tour{N}.csv'
 	a.optimize(filename)
 	from plotResult import doPlots
