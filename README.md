@@ -1,7 +1,5 @@
 # TSP_EA
 
-Repository for the group phase project of the course "Genetic Algorithms and Evolutionary Computing".
-
 Below the performance of the algorithm. In the green line is the heuristics to beat. It can be seen that the algorithm performs well during all the duration on the 5min time contraint. On the blue line the Mean Fitness its plotted. From the oscilating peaks it is shown that the EA does exploration throughout all the cycle while conserving the optimal minium (Best Fitness) at a constant pace. At the beginning of initTime (left graph) it is shown that the mutation mechanisms allow to explore all the search space. Thus, avoiding oscilating around a local minimum.
 
 
